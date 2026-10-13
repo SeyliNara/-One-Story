@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>One Story – Carrière de pirate</title>
+<style>
+:root{--bg:#f3e9d2;--fg:#2a1f14;--card:#fffaf0;--ac:#b8321f;--gold:#b98a0f;--mut:#7a6a55;--bd:#d9c9a5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a2b;--fg:#f1e8d0;--card:#18263d;--ac:#ff6b4a;--gold:#f2c14e;--mut:#9aa8c0;--bd:#2c3d5c}}
+:root[data-theme="dark"]{--bg:#0f1a2b;--fg:#f1e8d0;--card:#18263d;--ac:#ff6b4a;--gold:#f2c14e;--mut:#9aa8c0;--bd:#2c3d5c}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:Georgia,'Times New Roman',serif;line-height:1.45}
+#app{max-width:720px;margin:0 auto;padding:14px}
+h1{font-size:1.7rem;margin:.2em 0;color:var(--ac);text-align:center}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin:10px 0}
+.rare{border:2px solid var(--gold);box-shadow:0 0 18px var(--gold);animation:p 1.4s infinite alternate}
+@keyframes p{to{box-shadow:0 0 4px var(--gold)}}
+button,select,input{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:9px 12px;width:100%;margin:4px 0}
+button{cursor:pointer;text-align:left}
+button:hover{border-color:var(--ac)}
+button.pri{background:var(--ac);color:#fff;border-color:var(--ac);text-align:center;font-weight:bold}
+label{display:block;margin-top:8px;color:var(--mut);font-size:.9rem}
+.hd{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:.95rem}
+.hd b{color:var(--gold)}
+.bar{display:grid;grid-template-columns:78px 1fr 28px;gap:8px;align-items:center;font-size:.85rem;margin:3px 0}
+.bar i{display:block;height:8px;border-radius:4px;background:var(--ac)}
+.bar s{display:block;height:8px;border-radius:4px;background:var(--bd);text-decoration:none}
+.mut{color:var(--mut);font-size:.88rem}
+.fx{color:var(--gold);font-weight:bold;margin:8px 0}
+.g2{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:6px}.mem{border:1px solid var(--bd);border-radius:8px;padding:6px 8px;font-size:.82rem}.nem{border-color:var(--ac)}summary{cursor:pointer;font-weight:bold}
+.arena{position:relative;height:210px;border-radius:12px;overflow:hidden;background:linear-gradient(#7ec8f0 55%,#1c6fa8 55%);border:1px solid var(--bd)}
+.arena:before{content:'';position:absolute;left:0;right:0;bottom:0;height:45%;background:repeating-linear-gradient(90deg,#ffffff30 0 14px,transparent 14px 40px);animation:wv 3s linear infinite}
+@keyframes wv{to{background-position:80px 0}}
+.fi{position:absolute;bottom:26px;width:80px;height:120px;transition:transform .25s;animation:bob 1.6s ease-in-out infinite}
+.fi.p{left:12%}.fi.e{right:12%;transform:scaleX(-1)}
+@keyframes bob{50%{margin-bottom:6px}}
+.fi.p.atk{transform:translateX(min(36vw,240px)) rotate(10deg)}.fi.e.atk{transform:scaleX(-1) translateX(min(36vw,240px)) rotate(10deg)}
+.fi.hit{animation:shk .3s,fl .3s}
+@keyframes shk{25%{margin-left:-8px}75%{margin-left:8px}}
+@keyframes fl{50%{filter:brightness(2.5) saturate(0)}}
+.dmg{position:absolute;top:40px;font:bold 24px Georgia,serif;color:#ff3b30;text-shadow:0 0 3px #000;animation:up .9s forwards}
+@keyframes up{to{transform:translateY(-45px);opacity:0}}
+.bt{display:flex;gap:12px}.bt>div{flex:1}
+.tag{display:inline-block;border:1px solid var(--gold);border-radius:99px;padding:1px 9px;margin:2px;font-size:.8rem}
+</style></head><body><div id="app"></div><p class="mut" style="text-align:center;padding:0 14px 20px">Jeu de fan non officiel, inspiré de One Piece (© Eiichiro Oda / Shueisha / Toei). Sans but lucratif.</p>
+<script>
+const $=id=>document.getElementById(id),R=(a,b)=>a+Math.floor(Math.random()*(b-a+1)),pick=a=>a[R(0,a.length-1)],cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ST={F:'Force',V:'Vitesse',H:'Haki',I:'Intellect',C:'Chance'};
+const ISLES={'East Blue':{I:1,C:1},'North Blue':{F:1,H:1},'West Blue':{V:1,I:1},'South Blue':{C:2},'Grand Line':{F:1,V:1},'Île des Hommes-Poissons':{F:2,H:1}};
+const STYLES={'Épéiste':{F:2,V:2,k:'F'},'Pugiliste':{F:4,k:'F'},'Tireur':{V:2,I:2,k:'V'},'Karaté Aquatique':{F:3,H:1,k:'F'},'Stratège':{I:4,k:'I'},'Acrobate':{V:3,C:1,k:'V'}};
+const PATHS={Pirate:['Mousse','Pirate','Capitaine','Chef de flotte','Grand Pirate','Légende'],Marine:['Recrue','Sergent','Lieutenant','Capitaine','Vice-Amiral','Amiral'],Révolutionnaire:['Sympathisant','Agent','Officier','Commandant',"Chef d'armée",'Chef suprême']};
+const WIN={Pirate:'Roi des Pirates',Marine:'Amiral en chef',Révolutionnaire:'Chef suprême de la Révolution'};
+const TH=[0,10,25,50,90,140],SEA=['Printemps','Été','Automne','Hiver'],RG=['Mers de Blue','Grand Line','Nouveau Monde'];
+const NM=['Kaïro','Mira','Tobo','Sana','Brik','Yuna','Orik','Lena','Dax','Nami-Ko'],NM2=['le Borgne','la Rousse','Tempête','Marteau','Brume',"Cœur-d'Or",'Lame','le Rieur'];
+const RL=['Navigateur','Cuisinier','Médecin','Charpentier','Musicien','Archéologue',"Tireur d'élite",'Bretteur'];
+const PK={Navigateur:'Bonus passages',Archéologue:'Bonus trésors',Charpentier:'Bonus chantier',Cuisinier:'Soutien',Médecin:'Soigne',Musicien:'Soutien',"Tireur d'élite":'Bonus canons',Bretteur:'Bonus combat'};
+const SHN=['Barque','Caravelle','Galion','Navire de guerre','Vaisseau légendaire'];
+const ISL=[
+{n:'Foosha',s:0,t:'port',d:`village paisible où tout commence`},
+{n:'Shells Town',s:0,t:'marine',d:`base de la Marine en East Blue`},
+{n:'Baratie',s:0,t:'port',d:`restaurant flottant, rendez-vous de pirates`},
+{n:'Orange Town',s:0,t:'ville',d:`ville terrorisée par une bande de pirates`},
+{n:'Cocoyasi',s:0,t:'royaume',d:`village sous la coupe de pillards`},
+{n:'Loguetown',s:0,t:'ville',d:`dernière ville avant Grand Line`},
+{n:'Reverse Mountain',s:1,t:'mont',d:`la montagne où les mers convergent`},
+{n:'Whiskey Peak',s:1,t:'ville',d:`ville accueillante... trop accueillante`},
+{n:'Little Garden',s:1,t:'sauvage',d:`île préhistorique aux bêtes colossales`},
+{n:'Drum',s:1,t:'royaume',d:`royaume enneigé et son célèbre médecin`},
+{n:'Alabasta',s:1,t:'royaume',d:`royaume du désert au bord de la guerre civile`},
+{n:'Water 7',s:1,t:'port',d:`cité des charpentiers sur l'eau`},
+{n:'Enies Lobby',s:1,t:'marine',d:`forteresse judiciaire du Gouvernement`},
+{n:'Archipel Sabaody',s:1,t:'ville',d:`archipel de mangroves, repaire de pirates et de marchands`},
+{n:'Amazon Lily',s:1,t:'dojo',k:'H',d:`île des guerrières, maîtres du Haki`},
+{n:'Île des Hommes-Poissons',s:1,t:'dojo',k:'F',d:`royaume sous-marin du karaté aquatique`},
+{n:'Impel Down',s:1,t:'prison',d:`prison sous-marine de haute sécurité`},
+{n:'Marineford',s:1,t:'marine',d:`quartier général de la Marine`},
+{n:'Punk Hazard',s:2,t:'ruine',d:`île mi-feu mi-glace, laboratoire abandonné`},
+{n:'Dressrosa',s:2,t:'royaume',d:`royaume des jouets et de son colisée`},
+{n:'Zo',s:2,t:'sauvage',d:`île bâtie sur le dos d'un éléphant géant`},
+{n:'Whole Cake Island',s:2,t:'royaume',d:`archipel de sucreries, territoire impérial`},
+{n:'Wano',s:2,t:'dojo',k:'F',d:`pays des samouraïs, fermé au monde`}];
+function islandEv(i){const m=S.path==='Marine',b=n=>m?0:n,T={
+ port:()=>[{l:'Marché noir : acheter des informations (-20 recherche)',fx:{ht:-20,I:1}},{l:'Chercher un compagnon',fx:{add:mkM()},lock:S.crew.length>=cap()},{l:'Affaires louches (+prime, +recherche)',fx:{b:b(15),ht:10,r:1}}],
+ ville:()=>[{l:'Écouter les rumeurs',fx:{I:2,r:1}},D('Tendre un guet-apens à une bande locale','F',eb(.9),'capture',{},{w:{fx:{r:6,b:b(15)},t:`La bande est mise hors d'état de nuire.`},x:{t:'La bande était mieux préparée.'}}),{l:'Se fondre dans la foule (-15 recherche)',fx:{ht:-15}}],
+ marine:()=>m?[{l:'Se faire remarquer de la hiérarchie',k:'I',df:11,w:{fx:{r:10},t:'Ton dossier impressionne.'},x:{fx:{r:-2},t:`Tes supérieurs t'ignorent.`}},{l:`S'entraîner à la caserne`,fx:{F:2,H:1}}]:[D('Piller le dépôt de la base','F',eb(1.3),'capture',{},{w:{fx:{b:40,r:6,ht:20},t:'Tu repars avec les caisses.'},x:{t:'Alerte générale !'}}),{l:'Observer les patrouilles',fx:{I:2,ht:5}}],
+ mont:()=>[{l:'Gravir le courant à contre-sens',k:'I',rb:'Navigateur',df:12,w:{fx:{I:2,r:4},t:'Tu maîtrises le courant !'},x:{fx:{h:-25,hp:-10},t:'Le courant fracasse ton navire.'}},{l:'Observer les navires',fx:{I:1}}],
+ royaume:()=>[D(`Aider le peuple contre ses oppresseurs`,'F',eb(1.1),'blessure',{},{w:{fx:{r:12,F:1,b:b(20)},t:'Le peuple te porte en triomphe.'},x:{t:'Les oppresseurs te chassent.'}}),{l:'Négocier une alliance locale',k:'I',df:11,w:{fx:{r:6,ht:-10,cl:1},t:'Un pacte avantageux est signé.'},x:{fx:{r:-2},t:'Les négociations échouent.'}}],
+ sauvage:()=>[D('Chasser les bêtes colossales','F',eb(1.4),'mort',{},{d0:'dévoré par une bête colossale',w:{fx:{F:2,r:6,b:b(30)},t:'Tu abats un colosse !'},x:{t:'La bête te piétine.'}}),{l:'Explorer prudemment',k:'C',df:9,w:{fx:{I:1,b:b(10)},t:'Tu trouves de quoi remplir tes cales.'},x:{fx:{hp:-10},t:'Tu te perds dans la jungle.'}}],
+ ruine:()=>[{l:'Fouiller les laboratoires',k:'I',rb:'Archéologue',df:13,w:{fx:{I:2,b:b(40),r:4},t:'Tu extrais des données précieuses.'},x:{fx:{hp:-20},t:'Gaz toxiques !'}},{l:'Explorer la zone interdite',fx:{H:2,F:1},rk:.35,rkfx:{hp:-40}}],
+ prison:()=>[D('Libérer des prisonniers','F',eb(1.8),'capture',{},{d0:'tué par les geôliers',w:{fx:{add:Object.assign(mkM(),{lv:R(6,9)}),r:10,ht:25},t:'Tu libères un détenu redoutable qui rejoint ton équipage !'},x:{t:'Les gardiens te maîtrisent.'}}),{l:'Rester à distance',fx:{I:1}}],
+ dojo:()=>[{l:`S'entraîner auprès des maîtres (${ST[i.k]} +3)`,fx:{[i.k]:3}},D('Défier le maître local','F',eb(1.3),'blessure',{},{w:{fx:{[i.k]:4,r:6},t:'Le maître te salue : tu as gagné son respect.'},x:{fx:{[i.k]:1},t:'Tu es vaincu, mais tu apprends.'}})]};
+ return{t:i.n,d:i.n+' : '+i.d+'.',ch:T[i.t]()}}
+const LC=[
+{n:'Pirates du Chapeau de Paille',s:1,pw:52,fx:{C:3,r:8},d:`un équipage qui défie le monde`},
+{n:'Armée Révolutionnaire',s:1,pw:58,fx:{I:2,H:1,r:8,ht:-15},d:`l'armée qui veut renverser le Gouvernement`},
+{n:'Pirates du Cœur',s:1,pw:48,fx:{I:3,V:1,r:6},d:'des médecins redoutables'},
+{n:'Pirates de Kid',s:1,pw:50,fx:{F:3,b:30},d:'des brutes ambitieuses'},
+{n:'Pirates du Soleil',s:1,pw:56,fx:{F:2,V:2,r:6},d:'des hommes-poissons fiers et unis'},
+{n:'Pirates de Barbe Noire',s:2,pw:85,fx:{H:3,C:2,b:100},h:1,d:'une bande sans foi ni loi'}];
+function legends(){const m=S.path==='Marine',ch=LC.filter(c=>c.s<=S.sea&&!S.ally.includes(c.n)).map(c=>m?D('Traquer les '+c.n,'F',c.pw,'mort',{},{d0:'tué par les '+c.n,w:{fx:{r:Math.round(c.pw/1.5),F:1},t:'Un exploit qui résonne dans toute la Marine !'},x:{t:'Ils te balaient.'}}):D('Gagner la confiance des '+c.n+' ('+c.d+')','H',Math.round(c.pw*.55),c.h?'mort':'blessure',{},{d0:'tué par les '+c.n,w:{fx:Object.assign({al:c.n},c.fx),t:'Les '+c.n+' te reconnaissent comme un allié !'},x:{t:'Ils te jugent indigne.'}}));
+ ch.push({l:`Chercher les vestiges de l'équipage de Roger`,k:'I',df:16,w:{fx:{I:3,H:2,r:10},t:'Tu retrouves un fragment de leur histoire : des secrets sur le Haki et la dernière île.'},x:{fx:{hp:-15},t:'Les pistes sont brouillées.'}});
+ return{t:'🏴 Équipages légendaires',d:`Les grandes équipes de ce monde. S'allier à l'une d'elles augmente ta puissance (+4 par allié).`,ch}}
+const WA=[
+{n:'La Bataille de Marineford',min:1,d:`La Marine veut exécuter un pirate légendaire ; ses alliés déferlent.`,A:'la Marine',B:'la coalition pirate',pA:['Marine'],pB:[],aA:[],aB:['Pirates du Soleil','Pirates du Cœur','Pirates de Kid']},
+{n:`L'assaut contre un Empereur`,min:2,d:`Une coalition de Supernovas attaque un Empereur du Nouveau Monde.`,A:`l'Empereur`,B:'la coalition',pA:[],pB:[],aA:[],aB:['Pirates du Chapeau de Paille','Pirates de Kid','Pirates du Cœur']},
+{n:'Le siège du Grand Corsaire',min:1,d:`Révolutionnaires et pirates assiègent un Grand Corsaire.`,A:'le Gouvernement',B:'les assiégeants',pA:['Marine'],pB:['Révolutionnaire'],aA:[],aB:['Armée Révolutionnaire','Pirates du Chapeau de Paille']}];
+const callable=()=>{const a=WA[S.wa.i];return S.sea>=a.min&&(a.pA.includes(S.path)||a.pB.includes(S.path)||S.ally.some(x=>a.aA.concat(a.aB).includes(x)))};
+function startWorld(){const i=pick(WA.map((a,k)=>k).filter(k=>k!==1||S.emp.filter(e=>!e.dead).length>(S.seat?0:1))),al=S.emp.map((e,k)=>k).filter(k=>!S.emp[k].dead);S.wa={i,left:3,side:0,e:i===1?pick(al):0,called:0};S.nw='🌍 Actualité mondiale : '+WA[i].n+'. '+WA[i].d;log(S.nw)}
+function callEv(){const w=S.wa,a=WA[w.i],E=eb(1.7),lab=w.i===1?S.emp[w.e].n:a.A;w.called=1;
+ const mk=(s,l,foe)=>D(l,'H',E,'mort',{},{en:foe,side:s,d0:'tombé durant '+a.n,w:{fx:{r:20,b:S.path==='Marine'?0:80},t:'Ton camp prend le dessus !'},x:{t:'Ton camp plie sous le choc...'}});
+ return{t:'📯 '+a.n,d:`${a.d} Deux camps : ${lab} contre ${a.B}.`,ch:[mk('A','Rejoindre '+lab,'Champion de '+a.B),mk('B','Rejoindre '+a.B,'Champion de '+lab),{l:'Rester neutre et profiter du chaos',fx:{ua:a.aA.concat(a.aB),ht:S.path==='Marine'?0:10,b:S.path==='Marine'?0:20},t:'Tu laisses les autres se battre.'}]}}
+function worldEnd(){const w=S.wa,a=WA[w.i],lab=w.i===1?S.emp[w.e].n:a.A;let A=w.side?(w.side==='A')===!!w.won:Math.random()<.5,t=`🌍 ${a.n} : victoire de ${A?lab:a.B}.`;
+ if(w.side){if((w.side==='A')===A){S.r+=25;t+=' Ton camp triomphe : réputation +25.'}else{S.r=Math.max(0,S.r-10);t+=' Ton camp est défait : réputation -10.'}}
+ if(w.i===1){const e=S.emp[w.e];if(!e.dead){if(!A){if(w.side==='B'&&w.won)t+=' '+apply({ew:w.e});else{e.dead=1;t+=` ${e.n} est tombé.`}}else e.pw+=4}}else S.wf=(S.wf||0)+(A?8:-8);
+ S.wa=null;S.nw=t;log(t)}
+let B=null,OK=0;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const fig=(col,hat)=>`<svg viewBox="0 0 60 90" width="80" height="120"><circle cx="30" cy="18" r="11" fill="#f1c9a0" stroke="#000" stroke-width="1.5"/>${hat?'<path d="M15 14h30M20 14a10 9 0 0 1 20 0z" fill="#e8c85a" stroke="#000"/>':'<rect x="19" y="5" width="22" height="7" fill="#222"/>'}<rect x="20" y="30" width="20" height="30" rx="4" fill="${col}" stroke="#000" stroke-width="1.5"/><path d="M20 34L6 52M40 34L54 52M25 60L20 86M35 60L40 86" stroke="#000" stroke-width="5" stroke-linecap="round"/><path d="M54 52L58 20" stroke="#cfd8e0" stroke-width="3"/></svg>`;
+const hb=(v,m,c)=>`<div style="height:10px;background:var(--bd);border-radius:5px"><div style="height:10px;width:${Math.max(0,v/m*100)}%;background:${c};border-radius:5px"></div></div>`;
+function startBattle(i){const c=CUR.ch[i],P=Pe(c),pm=Math.round(80+P*1.2),em=Math.round(80+c.E*1.2);
+ B={i,c,P,E:c.E,pm,ph:Math.max(5,Math.round(pm*S.hp/100)),em,eh:em,ki:60,it:Math.random()<.3?'h':'a',st:0,g:0,sup:1,lg:[`⚔️ Le combat commence !`],busy:0,n:c.en||CUR.t};render()}
+function drawB(){const b=B,r=b.E/b.P,ec=r>1.3?'#7b1fa2':r>.8?'#c62828':'#546e7a';
+ $('app').innerHTML=`<h1>⚔️ ${esc(b.n)}</h1><div class="arena" id="ar"><div class="fi p" id="fp">${fig('#c0392b',1)}</div><div class="fi e" id="fe">${fig(ec,0)}</div></div>
+<div class="card"><div class="bt"><div><b>${esc(S.name)}</b>${hb(b.ph,b.pm,'#3c9d4e')}<span class="mut">PV ${b.ph}/${b.pm} · Énergie ${b.ki}</span></div><div><b>${esc(b.n)}</b>${hb(b.eh,b.em,'#c62828')}<span class="mut">PV ${b.eh}/${b.em}</span></div></div>
+<p class="fx">${b.it==='h'?'⚠️ Il prépare une attaque dévastatrice ! Protège-toi !':'Il se prépare à frapper.'}</p>
+<div class="g2">${[['atk','🗡️ Attaque','gratuit'],['tec',S.fruit?'🍎 Pouvoir du fruit':'🌀 Technique ('+S.style+')','20 énergie'],['haki','💥 Haki','35 énergie'],['grd','🛡️ Garde','+15 énergie'],...(b.sup&&(S.crew.length||S.ally.length)?[['sup','🤝 Soutien','1 fois']]:[]),['flee','🏃 Fuir',''],['auto','⚡ Auto','résolution rapide']].map(([k,l,d])=>`<button ${b.busy?'disabled':''} onclick="doB('${k}')">${l}<br><span class="mut">${d}</span></button>`).join('')}</div>
+<div class="mut">${b.lg.slice(0,4).map(x=>esc(x)).join('<br>')}</div></div>`}
+async function doB(a){const b=B;if(!b||b.busy)return;if(a==='auto'){const i=b.i;B=null;return choose(i,undefined,1)}
+ b.busy=1;const v=()=>R(85,115)/100,L=m=>b.lg.unshift(m);
+ const pop=(who,d)=>{const e=document.createElement('div');e.className='dmg';e.style.left=who==='e'?'68%':'18%';e.textContent=d;$('ar').appendChild(e)};
+ const strike=async(who,d)=>{const f=$(who==='p'?'fp':'fe'),t=$(who==='p'?'fe':'fp');f.classList.add('atk');await sleep(260);t.classList.add('hit');pop(who==='p'?'e':'p',d);await sleep(380);f.classList.remove('atk')};
+ let d=0;
+ if(a==='flee'){const p=cl(.3+S.st.V/(S.st.V+b.E*.3)*.4,.1,.85);if(Math.random()<p){B=null;RES={txt:'Tu bats en retraite.',res:''};log('Fuite : '+b.n);return render()}L('🏃 Fuite impossible !')}
+ else if(a==='grd'){b.g=1;b.ki=Math.min(100,b.ki+15);L('🛡️ Tu te mets en garde.')}
+ else if((a==='haki'&&b.ki<35)||(a==='tec'&&b.ki<20)){L(`Pas assez d'énergie !`);b.busy=0;return drawB()}
+ else{const m={atk:1,tec:1.4,haki:1.9,sup:0}[a];if(a==='haki')b.ki-=35;if(a==='tec')b.ki-=20;
+  if(a==='sup'){b.sup=0;d=Math.round(cp()*.8+S.ally.length*8);L('🤝 Tes compagnons et alliés frappent : '+d)}
+  else{const crit=Math.random()<.05+S.st.C/200,miss=a==='atk'&&Math.random()<.12;d=miss?0:Math.round(b.P*.28*m*v()*(crit?1.7:1));L(miss?'Raté !':(crit?'💫 Coup critique ! ':'')+d+' dégâts')}
+  if(a==='tec'&&Math.random()<.35){b.st=1;L('Il est étourdi !')}
+  await strike('p',d||'Raté');b.eh=Math.max(0,b.eh-d)}
+ if(b.eh<=0)return endB(1);
+ if(b.st){b.st=0;L('Il est trop étourdi pour riposter.')}
+ else{const hv=b.it==='h',e=Math.round(b.E*.28*v()*(hv?2:1)*(b.g?(hv?.4:.35):1));b.ph=Math.max(0,b.ph-e);L((hv?'💥 Attaque dévastatrice : ':'Il frappe : ')+e+' dégâts');await strike('e',e)}
+ if(b.ph<=0)return endB(0);
+ b.g=0;b.ki=Math.min(100,b.ki+12);b.it=Math.random()<.3?'h':'a';b.busy=0;drawB()}
+function endB(w){const b=B,i=b.i;if(w)S.hp=Math.max(1,Math.round(b.ph/b.pm*100));B=null;choose(i,!!w)}
+const FRC=[
+{n:'Fruit du Poisson Rouge (Zoan)',w:12,fx:{V:1,fp:2}},
+{n:'Fruit de la Poterie (Paramecia)',w:12,fx:{I:1,fp:2}},
+{n:'Fruit du Miroir (Paramecia)',w:14,fx:{I:2,H:1,F:2,fp:6}},
+{n:'Fruit des Lames (Paramecia)',w:14,fx:{F:3,V:1,fp:6}},
+{n:'Fruit du Sable Chantant (Paramecia)',w:12,fx:{V:2,I:2,fp:6}},
+{n:'Fruit des Ombres (Paramecia)',w:10,fx:{H:2,V:2,fp:7}},
+{n:'Fruit de la Gravité (Paramecia)',w:5,fx:{F:3,H:3,fp:10}},
+{n:'Fruit du Loup Spectral (Zoan)',w:10,fx:{F:4,V:2,fp:8}},
+{n:'Fruit du Faucon Royal (Zoan)',w:8,fx:{V:5,H:1,fp:8}},
+{n:'Fruit de la Glace (Logia)',w:4,fx:{I:3,H:3,F:2,fp:14}},
+{n:'Fruit de la Foudre (Logia)',w:3,fx:{V:5,F:3,H:2,fp:15}},
+{n:'Fruit du Magma (Logia)',w:2,fx:{F:6,H:3,fp:16}},
+{n:'Fruit du Mammouth Ancestral (Zoan Antique)',w:2,fx:{F:7,H:2,fp:13}},
+{n:'Fruit du Phénix (Zoan Mythique)',w:.8,fx:{F:6,H:5,V:5,fp:22}}];
+const fruit2=()=>{let r=Math.random()*FRC.reduce((a,f)=>a+f.w,0);for(const f of FRC){r-=f.w;if(r<=0)return[f.n,Object.assign({},f.fx)]}return[FRC[0].n,Object.assign({},FRC[0].fx)]};
+function frSearch(){const m=S.path==='Marine',ch=[{l:'Fouiller les marchés noirs (≈3%, +recherche)',pf:.03,fx:{ht:m?0:10}},{l:'Explorer des îles reculées (≈4%, 30% de blessure)',pf:.04,fx:{},rk:.3,rkfx:{hp:-20}},D('Attaquer un convoi du Gouvernement (≈18% de fruit dans le butin)','F',eb(1.4),'capture',{},{w:{fx:{fs:.18,b:m?0:25,ht:m?0:15},t:'Tu pilles les caisses.'},x:{fx:{r:-2},t:`Le convoi était bien gardé.`}})];
+ if(S.loc==='Archipel Sabaody')ch.push({l:'Participer aux enchères clandestines (≈12%)',pf:.12,fx:{ht:5}});
+ if(S.loc==='Punk Hazard')ch.push({l:'Fouiller les laboratoires secrets (≈10%, gaz toxiques)',pf:.1,fx:{},rk:.4,rkfx:{hp:-25}});
+ return{t:'🍎 Chasse au Fruit du Démon',d:`Les fruits sont rarissimes et les meilleurs presque introuvables (Logia, Zoan antique, mythique). Une fois mangé, il ne se change plus et tu ne sais plus nager.`,ch}}
+let S=null,CUR=null,RES=null,saves=[];
+function load(){try{saves=JSON.parse(localStorage.getItem('opsv')||'[]')}catch(e){saves=[]}}
+function save(){try{if(!saves.includes(S))saves.push(S);localStorage.setItem('opsv',JSON.stringify(saves))}catch(e){}}
+const fmt=b=>b>=1000?(b/1000).toFixed(2).replace(/\.?0+$/,'')+' Md ฿':Math.round(b)+' M ฿';
+const rk=()=>S.title||PATHS[S.path][TH.filter(x=>S.r>=x).length-1];
+const arc=()=>S.age<18?'Les Premiers Pas':S.age<26?'La Grande Route':S.age<35?'Les Mers Déchaînées':"L'Ère des Légendes";
+const cp=()=>S.crew.reduce((a,m)=>a+m.lv,0)+S.ship.lv*2;
+const hm=()=>60+S.ship.lv*30,cap=()=>4+S.ship.lv*2;
+const pw=()=>Math.round(S.st.F+S.st.V*.7+S.st.H*1.4+S.st.I*.4+cp()*.6+(S.fruit?(S.fp||8):0)+(S.traits.includes('Arme légendaire')?6:0)+(S.ally||[]).length*4);
+const eb=t=>Math.round(([10,26,48][S.sea]+S.age*.8)*t);
+const has=r=>S.crew.some(m=>m.role===r);
+const lvl=r=>r<.5?'💀 hors de portée':r<.8?'🔴 très dangereux':r<1.2?'🟠 équilibré':'🟢 favorable';
+const log=t=>{S.log.unshift(`${S.age} ans, ${SEA[S.q]} — ${t}`);S.log=S.log.slice(0,25)};
+const mkEmp=()=>[{n:'Barbe Blanche',pw:78},{n:'Big Mom',pw:74},{n:'Kaido',pw:82},{n:'Shanks le Roux',pw:80}];
+function mig(c){c.ship=c.ship||{n:'Navire de '+c.name,lv:1,h:90};c.title=c.title||'';c.hp=c.hp||100;c.prison=c.prison||0;c.heat=c.heat||0;c.sea=c.sea||0;c.emp=c.emp||mkEmp();c.seat=c.seat||0;c.ally=c.ally||[];c.emp.forEach((e,i)=>e.n=mkEmp()[i].n);return c}
+const NP=['Barbe','Chacal','Spectre','Vipère','Faucheur','Corbeau'],NF=['Gorn','Vesta','Dracko','Ilsa','Rhan','Morrow'];
+function mkNem(){const t={Pirate:'Capitaine',Marine:'Pirate',Révolutionnaire:'Général'}[S.path];S.nem={n:t+' '+pick(NF)+' '+pick(NP),pw:Math.round(pw()*.9+4),w:0,l:0,s:pick(Object.keys(STYLES))};log('⚔️ Un némésis surgit : '+S.nem.n)}
+const mkM=()=>({n:pick(NM)+' '+pick(NM2),role:pick(RL),lv:R(2,5)+S.sea*2});
+function titles(){if(!S.title&&S.path!=='Marine'&&S.b>=100){S.title='Rookie';log('🌟 Tu deviens un Rookie');return '🌟 Tu es désormais un Rookie : les mers te surveillent !'}return ''}
+function apply(fx){const t=[],g=(s,v)=>{if(v>0&&S.st[s]>25)v=Math.max(1,Math.ceil(v/2));S.st[s]=Math.max(1,S.st[s]+v);t.push(ST[s]+(v>0?' +':' ')+v)};
+ for(const k in fx){const v=fx[k];
+ if(k==='K')g(STYLES[S.style].k,v);else if(ST[k]){if(v)g(k,v)}
+ else if(k==='b'){S.b=Math.max(0,S.b+v);if(v)t.push('Prime '+(v>0?'+':'')+v+' M')}
+ else if(k==='r'){S.r=Math.max(0,S.r+v);t.push('Réputation '+(v>0?'+':'')+v)}
+ else if(k==='ht'){S.heat=cl(S.heat+v,0,100);t.push('Recherche '+(v>0?'+':'')+v)}
+ else if(k==='hp'){S.hp=cl(S.hp+v,0,100);t.push('Santé '+(v>0?'+':'')+v)}
+ else if(k==='dx'){S.hp=0;S.cause=v}
+ else if(k==='h'){S.ship.h=Math.min(hm(),S.ship.h+v);t.push('Coque '+(v>0?'+':'')+v);if(S.ship.h<=0){S.ship.h=Math.floor(hm()*.4);S.ship.lv=Math.max(1,S.ship.lv-1);S.crew.pop();t.push('💥 Navire coulé ! Rafistolé, rétrogradé, un compagnon perdu');if(S.fruit){S.hp=Math.max(0,S.hp-25);t.push('Tu ne sais plus nager : -25 santé')}}}
+ else if(k==='add'){S.crew.push(v);t.push(v.n+" rejoint l'équipage")}
+ else if(k==='cr'&&S.crew.length)t.push(S.crew.splice(R(0,S.crew.length-1),1)[0].n+' quitte le navire')
+ else if(k==='cl'){S.crew.forEach(m=>m.lv++);if(S.crew.length)t.push('Équipage +1 niveau')}
+ else if(k==='su'){S.ship.lv=Math.min(5,S.ship.lv+1);S.ship.h=hm();t.push('🚢 Navire amélioré : '+SHN[S.ship.lv-1])}
+ else if(k==='fr')S.fruit=v;
+ else if(k==='fp')S.fp=v;
+ else if(k==='fs'){if(Math.random()<v*(1+S.st.C/40)){const[n,f]=fruit2();f.fr=n;t.push('🍎 Un fruit dans le butin : '+n);t.push(apply(f))}}
+ else if(k==='tr'){S.traits.push(v);t.push('✨ '+v)}
+ else if(k==='ti'){S.title=v;t.push('🌟 Titre : '+v)}
+ else if(k==='sea'){S.sea=cl(S.sea+v,0,2);S.loc=null;t.push('📍 '+RG[S.sea])}
+ else if(k==='pr'){S.prison=v===0?0:S.prison+v;t.push(S.prison>0?'⛓️ Prison : '+S.prison+' saisons':'Tu es libre !')}
+ else if(k==='pa'){S.path=v;S.r=Math.floor(S.r/2);S.title='';S.nem=null;S.heat=0;t.push('Nouvelle voie : '+v)}
+ else if(k==='ew'){const e=S.emp[v];e.dead=1;S.r+=25;S.b+=400;if(!S.seat){S.seat=1;S.title='Empereur';t.push('👑 Tu prends le siège de '+e.n+' : tu es Empereur !')}else t.push('☠️ '+e.n+' est vaincu')}
+ else if(k==='nw'&&S.nem){S.nem.w++;S.nem.pw=Math.max(8,S.nem.pw-3);t.push('Némésis '+S.nem.w+'/3');if(S.nem.w>=3){S.r+=25;S.b+=100;t.push('☠️ NÉMÉSIS VAINCU ! Réputation +25');S.nem=null;S.nt=S.age+4}}
+ else if(k==='nl'&&S.nem){S.nem.l++;S.nem.pw+=3;t.push('Ton némésis se renforce')}
+ else if(k==='ua'){const g=S.ally.filter(a=>v.includes(a));if(g.length){S.ally=S.ally.filter(a=>!v.includes(a));t.push('💔 '+g.join(', ')+' te tourne le dos')}}
+ else if(k==='loc')S.loc=v;
+ else if(k==='al'){S.ally.push(v);t.push('🤝 Allié : '+v)}
+ else if(k==='win')S.winf=1}
+ return t.join(' · ')}
+const Pe=c=>pw()+(c.k&&S.st[c.k]?S.st[c.k]*.6:0)+(c.rb&&has(c.rb)?5:0)+(c.k==='S'?S.ship.lv*5:0);
+function die(c){S.over=1;S.win=0;S.dead=c;save();RES=null;render();return null}
+function resolve(c,forced){let txt='Tu prends ta décision.',res='';
+ if(c.E){const P=Pe(c),r=P/c.E,p=cl(r*r/(1+r*r)+S.st.C/600,.03,.95);
+  if(OK=(forced===undefined?Math.random()<p:forced)){txt=(c.w&&c.w.t)||'Victoire !';res=apply((c.w&&c.w.fx)||{})}
+  else{txt=(c.x&&c.x.t)||'Défaite...';res=apply(Object.assign({hp:-Math.min(60,Math.round(10*c.E/P))},c.x&&c.x.fx));
+   if(c.kill==='mort'&&Math.random()<Math.min(.85,(c.E/P-1)*.45+.05))return die(c.d0||'tombé au combat');
+   if(c.kill==='capture'&&S.path!=='Marine'){res+=' · '+apply({pr:R(3,6)});txt+=' Tu es jeté en prison !'}}}
+ else if(c.pf!==undefined){const ok=Math.random()<c.pf*(1+S.st.C/40)*(has('Archéologue')?1.3:1);res=apply(c.fx||{});if(c.rk&&Math.random()<c.rk)res=(res?res+' · ':'')+'Imprévu : '+apply(c.rkfx);if(ok){const[n,f]=fruit2();f.fr=n;txt='🍎 Tu mets la main sur un fruit : '+n+' !';res=(res?res+' · ':'')+apply(f)}else txt='Rien trouvé cette saison.'}
+ else if(c.k){const rb=c.rb&&has(c.rb)?3:0,df=c.df+Math.floor((S.age-15)/3)+S.sea*3,roll=(c.k==='S'?S.ship.lv*3:S.st[c.k])+Math.floor(cp()/5)+rb+R(0,8),lk=R(1,100)<=S.st.C/3,ok=roll>=df||lk,o=ok?c.w:c.x;txt=(lk&&roll<df?'🍀 ':'')+(rb?`(${c.rb} +3) `:'')+o.t;res=apply(o.fx||{});if(!ok&&Math.random()<.4)res+=' · '+apply({h:-R(8,18)})}
+ else{res=apply(c.fx||{});if(c.t)txt=c.t;if(c.rk&&Math.random()<c.rk)res+=' · Imprévu : '+apply(c.rkfx)}
+ return{txt,res}}
+function choose(i,fo,auto){const c=CUR.ch[i];if(c.lock)return;if(c.E&&fo===undefined&&!auto)return startBattle(i);const o=resolve(c,fo);if(!o)return;if(c.side&&S.wa){S.wa.side=c.side;S.wa.won=OK;S.wa.left=Math.min(S.wa.left,1)}
+ if(S.hp<=0)return die(S.cause||'mort de tes blessures');if(S.winf)return finish(true);
+ const tm=titles();if(tm)o.res=(o.res?o.res+' · ':'')+tm;log(CUR.t+' — '+c.l);RES=o;render()}
+const D=(l,k,E,kill,rw,extra)=>Object.assign({l,k,E,kill,d0:'tué lors de : '+l,w:{fx:rw},x:{fx:{}}},extra);
+function train(){const g=(k,l)=>({l:`${l} (${ST[k]} +2)`,fx:{[k]:2}}),top=Object.keys(ST).slice(0,4).sort((a,b)=>S.st[b]-S.st[a])[0];
+ return{t:"S'entraîner",d:'Comment passes-tu cette saison ?',ch:[g('F','Soulever des rochers'),g('V','Courses sur les récifs'),g('H','Méditer sous une cascade'),g('I','Étudier cartes et stratégie'),{l:`Entraînement extrême (${ST[top]} +4, 30% de blessure grave)`,fx:{[top]:4},rk:.3,rkfx:{hp:-35}}]}}
+function rest(){return{t:'Se reposer',d:`Santé : ${S.hp}/100.`,ch:[{l:'Se reposer au calme (+35 santé)',fx:{hp:35}},...(has('Médecin')?[{l:'Te faire soigner par ton médecin (+55)',fx:{hp:55}}]:[]),{l:'Faire la fête (+10 santé, +1 Chance)',fx:{hp:10,C:1,r:1}}]}}
+function sail(){const ch=[{l:'Longer les côtes (prudent)',fx:{I:1,r:1}},...ISL.filter(i=>i.s===S.sea&&i.n!==S.loc).sort(()=>Math.random()-.5).slice(0,3).map(i=>({l:`Cap sur ${i.n} — ${i.d}`,fx:{loc:i.n},t:`Tu accostes à ${i.n} : ${i.d}. Va l'explorer !`}))];
+ if(S.sea<2){if(S.sea===0||S.ship.lv>=3)ch.push({l:S.sea===0?'Entrer sur Grand Line':'Franchir la Red Line vers le Nouveau Monde',k:'I',rb:'Navigateur',df:S.sea?20:11,w:{fx:{sea:1,r:8},t:`Passage réussi ! Une nouvelle mer s'ouvre à toi.`},x:{fx:{h:-30,hp:-15},t:'La mer te rejette, navire endommagé.'}});else ch.push({l:'🔒 Red Line (navire niveau 3 requis)',lock:1,fx:{}})}
+ if(S.sea>0)ch.push({l:'Retourner vers '+RG[S.sea-1],fx:{sea:-1}});return{t:'Naviguer',d:'Tu es dans : '+RG[S.sea]+'.',ch}}
+function island(){const li=ISL.find(i=>i.n===S.loc);if(li)return islandEv(li);const o=[
+()=>({t:'Épave mystérieuse',d:`Une épave dérive, couverte d'algues.`,ch:[{l:'La fouiller',k:'C',df:9,w:{fx:{r:3,I:1,b:S.path==='Marine'?0:10},t:'Un coffre de berries et une vieille carte !'},x:{fx:{hp:-12},t:`Piège ! Tu t'en sors de justesse.`}},{l:'La laisser',fx:{}}]}),
+()=>({t:'Un vieux maître',d:`Un ancien combattant t'observe.`,ch:[{l:`Suivre son enseignement`,fx:{K:3}},D('Lui demander un duel','F',eb(1.2),'blessure',{K:3,H:1,r:3},{w:{fx:{K:3,H:1,r:3},t:'Il sourit : « Pas mal, gamin. »'},x:{fx:{K:1},t:'Tu perds, mais tu apprends beaucoup.'}})]}),
+()=>({t:`Festival de l'île`,d:'Musique, danse, rencontres.',ch:[{l:'Concours de boisson',k:'C',df:7,w:{fx:{r:4,C:1},t:'Tu deviens la star de la soirée.'},x:{fx:{hp:-5},t:'Tu dors sous une table.'}},{l:'Chercher des rumeurs',fx:{I:1,r:2}}]}),
+()=>({t:'Chasse au trésor',d:'Une carte mène à une île maudite.',ch:[{l:`Partir à l'aventure`,k:'I',rb:'Archéologue',df:12,w:{fx:{b:S.path==='Marine'?0:40,r:8},t:'Le trésor existe !'},x:{fx:{hp:-15,h:-10},t:'Rien... et des pièges partout.'}},{l:'Vendre la carte',fx:{r:1,I:1}}]}),
+()=>({t:'Village opprimé',d:'Une bande rançonne un village.',ch:[D('Chasser la bande','F',eb(.9),'blessure',{r:10,F:1},{w:{fx:{r:10,F:1},t:'Le village te remercie.'},x:{t:'Ils te mettent en fuite.'}}),{l:'Les soudoyer pour partir',fx:{r:2,I:1}}]}),
+()=>({t:'Ruines anciennes',d:'Des inscriptions étranges couvrent les murs.',ch:[{l:'Déchiffrer les inscriptions',k:'I',df:13,w:{fx:{I:2,H:1,r:3},t:`Tu comprends un fragment d'histoire oubliée.`},x:{fx:{hp:-15},t:'Un piège se déclenche.'}},{l:'Passer ton chemin',fx:{}}]})];
+ return pick(o)()}
+function hunt(){const m=S.path==='Marine',rw=E=>Object.assign({r:Math.round(E/(m?5:7))},m?{}:{b:Math.round(E*.9),ht:10}),tg={Pirate:['un navire marchand','un chasseur de primes','une escadre de la Marine'],Marine:['des contrebandiers','un capitaine pirate','une flotte pirate'],Révolutionnaire:['un poste de garde','une garnison','un seigneur corrompu']}[S.path],
+ f=(l,k,t,kill)=>{const E=eb(t);return D(l,k,E,kill,rw(E),{w:{fx:rw(E),t:'Victoire !'},x:{fx:{r:-2},t:'Défaite...'}})};
+ return{t:'Chercher le combat',d:'Choisis ta cible : plus elle est forte, plus le gain est grand, et le risque aussi.',ch:[f('Attaquer '+tg[0]+' (proie facile)','F',.6,'blessure'),f('Affronter '+tg[1]+' (de taille)','F',1,'capture'),f('Défier '+tg[2]+' (gros poisson)','F',1.6,'mort'),f('Tendre une embuscade à '+tg[1],'I',1.3,'capture')]}}
+function shipEv(){const ch=[];if(S.crew.length<cap()){const m=mkM();ch.push({l:`Recruter ${m.n}, ${m.role} (niv. ${m.lv})`,fx:{add:m}})}
+ ch.push({l:'Réparer la coque (+40)',fx:{h:40}},{l:`Améliorer le navire (${SHN[Math.min(4,S.ship.lv)]})`,k:'I',rb:'Charpentier',df:8+S.ship.lv*3,w:{fx:{su:1},t:'Les ouvriers font des miracles !'},x:{fx:{h:15},t:'Le budget fond... simples réparations.'}});
+ if(S.crew.length)ch.push({l:`Entraîner l'équipage`,fx:{cl:1}});return{t:'Navire et équipage',d:`Ton navire : ${SHN[S.ship.lv-1]}, équipage ${S.crew.length}/${cap()}.`,ch}}
+function intr(){const ch=[{l:'Se faire discret (-25 recherche)',fx:{ht:-25}},{l:'Soudoyer un officier (-35 recherche, -3 réputation)',fx:{ht:-35,r:-3}}];
+ if(S.path==='Pirate'&&S.title==='Rookie'&&S.b>=300)ch.push({l:'Négocier le titre de Corsaire (protection du Gouvernement)',fx:{ti:'Corsaire',r:10,ht:-100}});
+ if(S.title==='Corsaire')ch.push({l:'Renoncer au titre de Corsaire',fx:{ti:'Rookie',r:-5}});
+ Object.keys(PATHS).filter(p=>p!==S.path).forEach(p=>ch.push({l:`Changer de voie : ${p} (réputation divisée par 2)`,fx:{pa:p}}));return{t:'Intrigues',d:'Dans les ombres, tout se négocie.',ch}}
+function duel(){const n=S.nem,d=(l,k,a)=>D(l,k,n.pw+a,'mort',{nw:1,r:6},{w:{fx:{nw:1,r:6},t:'Victoire sur '+n.n+' !'},x:{fx:{nl:1,r:-3},t:n.n+` prend l'avantage...`}});
+ return{t:'⚔️ Duel : '+n.n,d:`Style ${n.s}, puissance ${n.pw}. Bilan : ${n.w} V / ${n.l} D. Trois victoires pour l'abattre.`,ch:[d('Affronter de face','F',0),d('Lui tendre un piège','I',4),d('Duel de Haki','H',2)]}}
+function empEv(){const ch=S.emp.map((e,i)=>({e,i})).filter(x=>!x.e.dead).map(({e,i})=>D((S.seat?'Défier ':'Prendre la place de ')+e.n,'H',Math.round(e.pw),'mort',{ew:i},{d0:'tué par '+e.n,w:{fx:{ew:i},t:'Victoire historique contre '+e.n+' !'},x:{t:e.n+' te terrasse.'}}));
+ return{t:'👑 Les Quatre Empereurs',d:S.seat?'Tu es Empereur. Pour la dernière île, tu dois vaincre les trois autres.':`Pour viser la dernière île, prends d'abord le siège d'un Empereur en le battant.`,ch}}
+const gate=()=>({t:`🏝️ La dernière île`,d:'Les gardiens du trésor ultime se dressent devant toi.',ch:[D('Affronter les gardiens','H',Math.round(110+S.age*1.2),'mort',{win:1},{d0:'tombé aux portes de la dernière île',w:{fx:{win:1},t:'Tu poses le pied sur la dernière île !'},x:{t:'Les gardiens te repoussent.'}}),{l:'Pas encore',fx:{}}]});
+const fin=()=>({t:'🏁 Défi suprême',d:'Le sommet est à portée : un dernier combat décidera de ta légende.',ch:[D('Livrer la bataille finale','H',Math.round(100+S.age*1.2),'mort',{win:1},{d0:'tombé lors de la bataille finale',w:{fx:{win:1},t:'Victoire totale !'},x:{t:'Tu es repoussé, grièvement blessé.'}}),{l:'Pas encore',fx:{}}]});
+const ACT=[
+{i:'🏋️',l:"S'entraîner",d:'Progresser, au risque de te blesser',ev:train},
+{i:'🧭',l:'Naviguer',d:'Changer de mer, longer les côtes',ev:sail},
+{i:'🗺️',l:'Explorer une île',d:'Rencontres, trésors, dangers',ev:island},
+{i:'⚔️',l:'Chercher le combat',d:'Gains et risques selon ta cible',ev:hunt},
+{i:'⚓',l:'Navire et équipage',d:'Recruter, réparer, améliorer',ev:shipEv},
+{i:'🕵️',l:'Intrigues',d:'Te faire oublier, changer de voie',ev:intr},
+{i:'🩹',l:'Se reposer',d:'Récupérer de la santé',ev:rest},
+{i:'🍎',l:'Chercher un Fruit du Démon',d:'Très rare, mais puissant',ok:()=>!S.fruit,ev:frSearch},
+{i:'🌍',l:'Rejoindre le conflit',d:'Un grand conflit secoue le monde',ok:()=>S.wa&&!S.wa.side&&S.sea>=WA[S.wa.i].min,ev:()=>callEv()},
+{i:'🏴',l:'Équipage légendaire',d:'Rencontrer une légende des mers',ok:()=>S.sea>0,ev:legends},
+{i:'😈',l:'Traquer ton némésis',d:'Duel à mort',ok:()=>S.nem,ev:duel},
+{i:'👑',l:'Défier un Empereur',d:'Nouveau Monde uniquement',ok:()=>S.path==='Pirate'&&S.sea===2&&S.emp.some(e=>!e.dead),ev:empEv},
+{i:'🏝️',l:'La dernière île',d:'Tu es le plus fort des quatre',ok:()=>S.path==='Pirate'&&S.seat&&S.emp.every(e=>e.dead)&&S.ship.lv>=4&&S.crew.length>=3,ev:gate},
+{i:'🏁',l:'Défi suprême',d:'Le dernier combat',ok:()=>S.path!=='Pirate'&&S.r>=120&&S.age>=25,ev:fin}];
+function act(i){CUR=ACT[i].ev();CUR.act=1;render()}
+function hostile(){const n={Pirate:'Des chasseurs de primes',Marine:'Des pirates audacieux',Révolutionnaire:'Des agents du Gouvernement'}[S.path];
+ return{t:n+' te tendent un piège',d:'Ils sont organisés et armés.',ch:[D('Se battre','F',eb(1),'capture',{r:4,b:S.path==='Marine'?0:15},{w:{fx:{r:4,b:S.path==='Marine'?0:15},t:'Tu les écrases.'},x:{fx:{r:-2},t:'Ils te submergent.'}}),D('Fuir en mer','V',eb(.8),'capture',{},{w:{fx:{},t:'Tu leur échappes.'},x:{t:'Ils te rattrapent.'}}),D('Ruse tactique','I',eb(1.1),'capture',{r:6},{w:{fx:{r:6},t:'Piège retourné contre eux !'}})]}}
+function admiral(){const E=Math.round([34,56,70][S.sea]+S.age*1.1+(S.wf||0)),nm=S.sea===2?'Amiral':'Vice-amiral';
+ return{t:`⚓ Un ${nm} te barre la route`,d:`Un officier d'élite et sa flotte te rattrapent. Il peut te tuer.`,ch:[D('Combattre','F',E,'mort',{r:30,b:100},{d0:`tué par un ${nm} de la Marine`,w:{fx:{r:30,b:100,ht:10},t:'Impossible... tu as vaincu un officier de ce rang !'},x:{t:'Il te terrasse sans effort.'}}),D('Fuir en mer','V',Math.round(E*.75),'mort',{},{d0:`abattu par un ${nm} en fuite`,w:{fx:{ht:-10},t:'Tu disparais dans la brume.'},x:{t:'Sa flotte te rattrape.'}}),...(S.crew.length?[{l:'Sacrifier un compagnon pour fuir',fx:{cr:-1,ht:-10,r:-5}}]:[]),{l:'Te rendre',fx:{pr:R(3,6),b:30}}]}}
+function monster(){const E=eb(S.sea===2?2:1.5);return{t:'Monstre des profondeurs',d:'Un colosse émerge des flots.',ch:[D('Le combattre','F',E,'mort',{r:12,F:1,b:60},{w:{fx:{r:12,F:1,b:60},t:'Tu abats la bête !'},x:{fx:{h:-25},t:'Elle fracasse ton navire.'}}),D('Bordée de canons','S',E,'blessure',{r:10,b:40},{w:{fx:{r:10,b:40},t:'Les canons font mouche.'},x:{fx:{h:-30},t:'Elle broie ta coque.'}}),D('Fuir','V',Math.round(E*.7),'blessure',{},{w:{fx:{},t:'Tu la sèmes.'},x:{fx:{h:-20},t:'Elle te mord les talons.'}})]}}
+function storm(){return{t:'Tempête',d:'Un ciel noir, des vagues hautes comme des falaises.',ch:[{l:'Affronter la tempête',k:'I',rb:'Navigateur',df:11,w:{fx:{H:1,r:3},t:'Ton sang-froid sauve le navire.'},x:{fx:{hp:-15,h:-20},t:'Le navire souffre, toi aussi.'}},{l:'Contourner (long détour)',fx:{h:-8,I:1}}]}}
+function sick(){return{t:'Fièvre à bord',d:'Une maladie se répand.',ch:[{l:'Soigner (le médecin aide)',k:'I',rb:'Médecin',df:10,w:{fx:{I:1},t:'Guérison rapide.'},x:{fx:{hp:-20,cr:-1},t:'La maladie fait des ravages.'}},{l:'Serrer les dents',fx:{hp:-10}}]}}
+function betray(){return{t:'Trahison à bord',d:`Un membre de l'équipage est soupçonné d'avoir vendu des informations.`,ch:[{l:'Lui pardonner',k:'I',df:10,w:{fx:{r:3},t:`Il était manipulé. Sa loyauté n'en est que plus forte.`},x:{fx:{cr:-1,r:-2,ht:15},t:'Il disparaît en livrant ta position...'}},{l:'Le chasser',fx:{cr:-1,H:1}}]}}
+function empHit(){const e=pick(S.emp.filter(x=>!x.dead)),E=Math.round(e.pw);return{t:`👑 ${e.n} te prend pour cible`,d:`Sa flotte entière a repéré ton pavillon. Puissance estimée ${E}.`,ch:[D('Lui tenir tête','H',E,'mort',{ew:S.emp.indexOf(e)},{d0:'tué par '+e.n,w:{fx:{ew:S.emp.indexOf(e)},t:'Tu terrasses '+e.n+' !'},x:{t:'Il te brise.'}}),D('Fuir','V',Math.round(E*.7),'mort',{},{d0:'rattrapé par '+e.n,w:{fx:{},t:'Tu lui échappes de justesse.'}}),{l:'Offrir un tribut',fx:{b:-150,r:-5,cr:-1}}]}}
+function PRI(){const E=eb(1.4);return{t:`⛓️ En prison (${S.prison} saisons)`,d:S.sea>0?'Impel Down : des cachots à perte de vue, des gardiens impitoyables.':'Les gardes sont nombreux et les murs épais.',ch:[{l:`Tenter l'évasion`,k:'V',df:15,w:{fx:{pr:0,ht:15,V:1},t:`Tu t'évades dans la nuit !`},x:{fx:{hp:-25,pr:2},t:'Rattrapé et passé à tabac.'}},{l:'Attendre en silence',fx:{pr:-1,hp:5,r:-2},rk:S.b>=800?.12:0,rkfx:{dx:'exécuté publiquement'}},...(S.crew.length>1?[D("Faire donner l'équipage",'S',E,'blessure',{pr:0,r:8,ht:20},{w:{fx:{pr:0,r:8,ht:20},t:'Tes compagnons forcent les portes !'},x:{fx:{cr:-1,pr:1},t:`L'assaut échoue, un compagnon est capturé.`}})]:[])]}}
+function fruit(){const r=Math.random(),P=['Miroir','Lames','Sable Chantant','Ombres'];if(r<.004)return['Fruit du Phénix (Zoan Mythique)',{F:4,H:3,V:3}];if(r<.04)return['Fruit de la Foudre (Logia)',{V:5,F:3,H:2}];if(r<.22)return['Fruit du Loup Spectral (Zoan)',{F:4,V:2}];return['Fruit du '+pick(P)+' (Paramecia)',{I:2,H:1,F:2}]}
+function rare(){const x=p=>Math.random()<p*(1+S.st.C/40);
+ if(!S.fruit&&x(.006)){const[n,f]=fruit2();f.fr=n;return{rare:1,t:'🍎 UN FRUIT DU DÉMON !',d:'Un fruit aux motifs en spirale, au goût atroce. Tu ne pourras plus jamais nager.',ch:[{l:'Incroyable !',fx:f}]}}
+ if(!S.traits.includes('Haki des Rois')&&x(.003))return{rare:1,t:'👑 HAKI DES ROIS',d:`Un silence : des hommes s'évanouissent autour de toi.`,ch:[{l:'Accepter ce pouvoir',fx:{H:6,tr:'Haki des Rois',r:10}}]};
+ if(x(.0025))return{rare:1,t:'🏴 UN MENTOR LÉGENDAIRE',d:'Une légende des mers te prend sous son aile.',ch:[{l:'Te dépasser',fx:{F:3,V:3,H:3,I:3,r:8}}]};
+ if(!S.traits.includes('Arme légendaire')&&x(.002))return{rare:1,t:'⚔️ ARME LÉGENDAIRE',d:'Une arme de grade suprême te choisit.',ch:[{l:'La saisir',fx:{F:4,tr:'Arme légendaire',b:40}}]};
+ if(x(.004))return{rare:1,t:'🍀 BÉNÉDICTION DE LA CHANCE',d:'Un banc de poissons dorés suit ton navire.',ch:[{l:'Remercier la mer',fx:{C:5}}]};return null}
+function incident(){if(S.path!=='Marine'&&S.title!=='Corsaire'&&S.sea>0&&Math.random()<S.heat/(S.sea===1?130:90))return admiral();
+ const c=[storm,sick,hostile];if(S.sea>0)c.push(monster);if(S.crew.length)c.push(betray);if(S.nem)c.push(duel);
+ if(S.sea===2&&S.b>=1000&&!S.seat&&S.emp.some(e=>!e.dead))c.push(empHit);return pick(c)()}
+function gen(){if(S.prison>0)return PRI();if(S.wa&&!S.wa.called&&callable())return callEv();const r=rare();if(r)return r;if(Math.random()<.4)return incident();return{hub:1}}
+function next(){S.nw='';S.q++;if(S.wa&&--S.wa.left<=0)worldEnd();if(!S.wa&&S.age>=17&&Math.random()<.07)startWorld();if(S.q>3){S.q=0;S.age++;S.emp.forEach(e=>{if(!e.dead)e.pw+=1.6});if(S.nem)S.nem.pw+=1.5;if(S.title==='Corsaire')S.r+=5;const a=arc();if(a!==S.arc){S.arc=a;log('📖 Nouveau chapitre : '+a)}}
+ S.heat=cl(S.heat-2,0,100);S.hp=cl(S.hp+(S.prison?2:6),0,100);if(S.age>=50)return finish(false);
+ if(!S.nem&&S.age>=18&&S.age>=(S.nt||0)&&Math.random()<.2)mkNem();save();CUR=gen();RES=null;render()}
+function finish(win){S.over=1;S.win=win;save();RES=null;render()}
+function start(){const n=$('nm').value.trim()||'Inconnu',i=$('is').value,s=$('sy').value,p=$('pa').value,st={F:3,V:3,H:3,I:3,C:3};for(const k in st)st[k]+=(ISLES[i][k]||0)+(STYLES[s][k]||0);
+ S={name:n,isle:i,style:s,path:p,age:15,q:0,st,b:0,r:0,crew:[],fruit:null,traits:[],log:[],arc:'Les Premiers Pas',ship:{n:p==='Marine'?'Navire de garnison':'Le '+pick(['Aube Dorée','Albatros','Vent Rouge','Ancre Brisée']),lv:1,h:90},nem:null,title:'',hp:100,prison:0,heat:0,sea:0,emp:mkEmp(),seat:0,ally:[],loc:null};
+ if(Math.random()<.01){for(const k in st)st[k]+=3;S.traits.push('Descendant de légende')}
+ log('Début de ton aventure à '+i);save();CUR=gen();RES=null;render()}
+function menu(){S=null;load();let h='<h1>🏴‍☠️ One Story</h1><p class="mut" style="text-align:center">Fan game — une mer cruelle, peu de légendes. Forge la tienne.</p>';
+ h+='<div class="card"><b>Nouveau personnage</b><label>Nom</label><input id="nm" maxlength="20" placeholder="Ton pirate...">';
+ const sel=(id,l,o)=>`<label>${l}</label><select id="${id}">${o.map(x=>`<option>${esc(x)}</option>`).join('')}</select>`;
+ h+=sel('is','Île natale',Object.keys(ISLES))+sel('sy','Style de combat',Object.keys(STYLES))+sel('pa','Voie',Object.keys(PATHS))+'<button class="pri" onclick="start()">Lever l\'ancre ⚓</button></div>';
+ if(saves.length)h+='<div class="card"><b>Tes personnages</b>'+saves.map((c,i)=>`<button onclick="S=mig(saves[${i}]);CUR=S.over?null:gen();RES=null;render()">${esc(c.name)} — ${esc(c.path)}, ${c.age} ans${c.over?(c.dead?' ☠️':' (terminé)'):''}</button>`).join('')+'</div>';
+ $('app').innerHTML=h}
+function render(){if(!S)return menu();if(B)return drawB();
+ const bar=(l,v,m,c)=>`<div class="bar"><span>${l}</span><s><i style="width:${Math.min(100,v/m*100)}%${c?';background:'+c:''}"></i></s><b>${Math.round(v)}</b></div>`;
+ let h=`<h1>${esc(S.name)}</h1><div class="card"><div class="hd"><span>${esc(rk())} · <b>${esc(S.path)}</b></span><span>${S.age} ans · ${SEA[S.q]}</span></div><div class="hd mut"><span>📍 ${esc(S.loc||RG[S.sea])} (${RG[S.sea]}) · ${esc(S.arc)}</span><span>${esc(S.isle)} · ${esc(S.style)}</span></div><div class="hd"><span>Prime : <b>${fmt(S.b)}</b></span><span>Réputation : <b>${S.r}</b></span><span>Puissance : <b>${pw()}</b></span></div>`+Object.keys(ST).map(k=>bar(ST[k],S.st[k],30)).join('')+bar('Santé',S.hp,100,'#3c9d4e')+(S.path!=='Marine'?bar('Recherché',S.heat,100,'#c77d00'):'');
+ h+=(S.fruit?`<span class="tag">🍎 ${esc(S.fruit)}</span>`:'')+S.traits.map(t=>`<span class="tag">✨ ${esc(t)}</span>`).join('')+S.ally.map(a=>`<span class="tag">🤝 ${esc(a)}</span>`).join('')+(S.prison>0?'<span class="tag">⛓️ En prison</span>':'')+'</div>';
+ h+=`<details class="card"><summary>🚢 ${esc(S.ship.n)} — ${SHN[S.ship.lv-1]}</summary>${bar('Coque',S.ship.h,hm())}<div class="mut">Niveau ${S.ship.lv}/5 · Canons : ${S.ship.lv*4} · Équipage max : ${cap()}</div></details>`;
+ h+=`<details class="card"><summary>👥 Équipage (${S.crew.length}/${cap()})</summary><div class="g2">${S.crew.length?S.crew.map(m=>`<div class="mem"><b>${esc(m.n)}</b><br>${esc(m.role)} · niv. ${m.lv}<br><span class="mut">${PK[m.role]}</span></div>`).join(''):'<span class="mut">Personne à bord.</span>'}</div></details>`;
+ if(S.path==='Pirate')h+=`<details class="card"><summary>👑 Les Quatre Empereurs${S.seat?' (tu es Empereur)':''}</summary>${S.emp.map(e=>`<div class="mut">${e.dead?'☠️ '+esc(e.n)+' — vaincu':esc(e.n)+' — '+lvl(pw()/e.pw)}</div>`).join('')}</details>`;
+ if(S.nem)h+=`<div class="card nem"><b>⚔️ Némésis : ${esc(S.nem.n)}</b><div class="mut">Style ${esc(S.nem.s)} · ${lvl(pw()/S.nem.pw)} · duels : ${S.nem.w} V / ${S.nem.l} D</div></div>`;
+ if(S.wa)h+=`<div class="card nem"><b>🌍 ${esc(WA[S.wa.i].n)}</b><div class="mut">${esc(WA[S.wa.i].d)} (${S.wa.left} saisons restantes)</div></div>`;if(S.nw&&!S.wa)h+=`<div class="card rare">${esc(S.nw)}</div>`;
+ if(S.over){h+=`<div class="card rare"><h2>${S.win?'👑 '+esc(WIN[S.path])+' !':S.dead?'☠️ Fin de carrière':'Fin de ton aventure'}</h2><p>${S.win?`Tu as accompli le rêve ultime. Ton nom est gravé dans l'histoire.`:S.dead?`À ${S.age} ans, tu es ${esc(S.dead)}. Rang atteint : <b>${esc(rk())}</b>, prime ${fmt(S.b)}.`:`À 50 ans, tu prends ta retraite avec le rang de <b>${esc(rk())}</b>, une prime de ${fmt(S.b)} et ${S.crew.length} compagnons.`}</p><button class="pri" onclick="menu()">Retour au menu</button></div>`}
+ else if(RES)h+=`<div class="card"><h3>${esc(CUR.t||'')}</h3><p>${esc(RES.txt)}</p>${RES.res?`<div class="fx">${esc(RES.res)}</div>`:''}<button class="pri" onclick="next()">Saison suivante ▶</button></div>`;
+ else if(CUR.hub)h+=`<div class="card"><h3>Que fais-tu cette saison ?</h3><div class="g2">${ACT.map((a,i)=>(!a.ok||a.ok())?`<button onclick="act(${i})">${a.i} <b>${a.l}</b><br><span class="mut">${a.d}</span></button>`:'').join('')}</div></div>`;
+ else h+=`<div class="card${CUR.rare?' rare':''}"><h3>${esc(CUR.t)}</h3><p>${esc(CUR.d)}</p>${CUR.ch.map((c,i)=>`<button ${c.lock?'disabled':''} onclick="choose(${i})">${esc(c.l)} <span class="mut">${c.E?lvl(Pe(c)/c.E):c.k?'('+(ST[c.k]||'Navire')+')':''}</span></button>`).join('')}${CUR.act?`<button onclick="CUR={hub:1};render()">↩ Changer d'idée</button>`:''}</div>`;
+ h+=`<div class="card"><b>Journal</b>${S.log.slice(0,8).map(l=>`<div class="mut">${esc(l)}</div>`).join('')}</div><button onclick="menu()">☰ Menu (sauvegarde auto)</button>`;
+ $('app').innerHTML=h}
+menu();
+
+</script></body></html>
